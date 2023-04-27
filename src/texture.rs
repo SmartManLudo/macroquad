@@ -12,6 +12,8 @@ use glam::{vec2, Vec2};
 
 pub use crate::quad_gl::FilterMode;
 
+use crate::scene_graph::SpriteLayer;
+
 /// Image, data stored in CPU memory
 #[derive(Clone)]
 pub struct Image {
@@ -241,7 +243,6 @@ pub fn render_target(width: u32, height: u32) -> RenderTarget {
     });
 
     let render_pass = context.new_render_pass(texture, None);
-
     let texture = Texture2D::from_miniquad_texture(texture);
 
     RenderTarget {
@@ -289,11 +290,19 @@ impl Default for DrawTextureParams {
     }
 }
 
-pub fn draw_texture(texture: Texture2D, x: f32, y: f32, color: Color) {
-    draw_texture_ex(texture, x, y, color, Default::default());
+pub fn draw_texture(
+    sprite_layer: &mut SpriteLayer,
+    texture: Texture2D,
+    x: f32,
+    y: f32,
+    color: Color,
+) {
+    draw_texture_ex(sprite_layer, texture, x, y, color, Default::default());
 }
 
 pub fn draw_texture_ex(
+    sprite_layer: &mut SpriteLayer,
+
     texture: Texture2D,
     x: f32,
     y: f32,
@@ -376,40 +385,9 @@ pub fn draw_texture_ex(
     ];
     let indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
-    context.gl.texture(Some(texture));
-    context.gl.draw_mode(DrawMode::Triangles);
-    context.gl.geometry(&vertices, &indices);
-}
-
-#[deprecated(since = "0.3.0", note = "Use draw_texture_ex instead")]
-pub fn draw_texture_rec(
-    texture: Texture2D,
-    x: f32,
-    y: f32,
-    w: f32,
-    h: f32,
-    sx: f32,
-    sy: f32,
-    sw: f32,
-    sh: f32,
-    color: Color,
-) {
-    draw_texture_ex(
-        texture,
-        x,
-        y,
-        color,
-        DrawTextureParams {
-            dest_size: Some(vec2(w, h)),
-            source: Some(Rect {
-                x: sx,
-                y: sy,
-                w: sw,
-                h: sh,
-            }),
-            ..Default::default()
-        },
-    );
+    sprite_layer.gl().texture(Some(texture));
+    sprite_layer.gl().draw_mode(DrawMode::Triangles);
+    sprite_layer.gl().geometry(&vertices, &indices);
 }
 
 /// Get pixel data from screen buffer and return an Image (screenshot)
@@ -451,11 +429,12 @@ impl Texture2D {
     /// # }
     /// ```
     pub fn empty() -> Texture2D {
-        let ctx = get_context();
+        unimplemented!()
+        // let ctx = get_context();
 
-        Texture2D {
-            texture: ctx.gl.white_texture,
-        }
+        // Texture2D {
+        //     texture: ctx.gl.white_texture,
+        // }
     }
 
     /// Creates a Texture2D from a slice of bytes that contains an encoded image.
@@ -550,10 +529,11 @@ impl Texture2D {
         width: i32,
         height: i32,
     ) {
-        let ctx = get_quad_context();
+        // let ctx = get_quad_context();
 
-        self.texture
-            .update_texture_part(ctx, x_offset, y_offset, width, height, &image.bytes)
+        // self.texture
+        //     .update_texture_part(ctx, x_offset, y_offset, width, height, &image.bytes)
+        unimplemented!()
     }
 
     /// Returns the width of this texture.

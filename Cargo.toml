@@ -36,6 +36,7 @@ bumpalo = "3.4"
 backtrace = { version = "0.3.60", optional = true, default-features = false, features = [ "std", "libbacktrace" ] }
 log = { version = "0.4", optional = true }
 quad-snd = { version = "0.2", optional = true }
+gltf = "*"
 
 [dev-dependencies]
 #macroquad-particles = { path = "./particles" }
@@ -47,7 +48,7 @@ quad-snd = { version = "0.2", optional = true }
 # this allows to use macroquad-particles in examples without two versions of macroquad
 [patch.crates-io]
 macroquad = { path = './' }
-quad-snd = {path = '../quad-snd'}
+#quad-snd = {path = '../quad-snd'}
 
-miniquad = { path = '../miniquad' }
+#miniquad = { path = '../miniquad' }
 #quad-gl = {path = './quad-gl'}

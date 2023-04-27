@@ -1182,7 +1182,6 @@ impl Ui {
 
 pub(crate) mod ui_context {
     use crate::prelude::*;
-    use crate::window::miniquad::*;
 
     use crate::ui as megaui;
 
@@ -1278,25 +1277,26 @@ pub(crate) mod ui_context {
         ) {
             // TODO: this belongs to new and waits for cleaning up context initialization mess
             let material = self.material.get_or_insert_with(|| {
-                load_material(
-                    ShaderSource {
-                        glsl_vertex: Some(VERTEX_SHADER),
-                        glsl_fragment: Some(FRAGMENT_SHADER),
-                        metal_shader: Some(METAL_SHADER),
-                    },
-                    MaterialParams {
-                        pipeline_params: PipelineParams {
-                            color_blend: Some(BlendState::new(
-                                Equation::Add,
-                                BlendFactor::Value(BlendValue::SourceAlpha),
-                                BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
-                            )),
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    },
-                )
-                .unwrap()
+                // load_material(
+                //     ShaderSource {
+                //         glsl_vertex: Some(VERTEX_SHADER),
+                //         glsl_fragment: Some(FRAGMENT_SHADER),
+                //         metal_shader: Some(METAL_SHADER),
+                //     },
+                //     MaterialParams {
+                //         pipeline_params: PipelineParams {
+                //             color_blend: Some(BlendState::new(
+                //                 Equation::Add,
+                //                 BlendFactor::Value(BlendValue::SourceAlpha),
+                //                 BlendFactor::OneMinusValue(BlendValue::SourceAlpha),
+                //             )),
+                //             ..Default::default()
+                //         },
+                //         ..Default::default()
+                //     },
+                // )
+                // .unwrap()
+                unimplemented!()
             });
 
             let mut ui = self.ui.borrow_mut();
@@ -1309,7 +1309,7 @@ pub(crate) mod ui_context {
             let font_texture: Texture2D = ui.atlas.borrow_mut().texture();
             quad_gl.texture(Some(font_texture));
 
-            gl_use_material(*material);
+            gl_use_material(&*material);
 
             for draw_command in &ui_draw_list {
                 if let Some(texture) = draw_command.texture {

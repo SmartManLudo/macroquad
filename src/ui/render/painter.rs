@@ -503,7 +503,8 @@ impl Painter {
         };
 
         let scaled_clipping_zone = self.clipping_zone.map(|rect| {
-            let dpi = crate::get_quad_context().dpi_scale();
+            //let dpi = crate::get_quad_context().dpi_scale();
+            let dpi = 1.0;
             Rect::new(rect.x * dpi, rect.y * dpi, rect.w * dpi, rect.h * dpi)
         });
         self.add_command(DrawCommand::Clip { rect: scaled_clipping_zone });

@@ -61,17 +61,17 @@ impl Camera {
     }
 }
 
-impl Into<Camera2D> for &Camera {
-    fn into(self) -> Camera2D {
-        let aspect = screen_width() / screen_height();
-        Camera2D {
-            zoom: vec2(self.scale, -self.scale * aspect),
-            offset: vec2(self.offset.x, -self.offset.y),
-            target: vec2(0., 0.),
-            rotation: 0.,
+// impl Into<Camera2D> for &Camera {
+//     fn into(self) -> Camera2D {
+//         let aspect = screen_width() / screen_height();
+//         Camera2D {
+//             zoom: vec2(self.scale, -self.scale * aspect),
+//             offset: vec2(self.offset.x, -self.offset.y),
+//             target: vec2(0., 0.),
+//             rotation: 0.,
 
-            render_target: None,
-            viewport: None,
-        }
-    }
-}
+//             render_target: None,
+//             viewport: None,
+//         }
+//     }
+// }

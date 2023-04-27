@@ -66,6 +66,8 @@ pub mod prelude;
 
 pub mod telemetry;
 
+pub mod scene_graph;
+
 /// Macroquad entry point.
 ///
 /// ```skip
@@ -142,7 +144,6 @@ pub use miniquad;
 
 use crate::{
     color::{colors::*, Color},
-    quad_gl::QuadGl,
     ui::ui_context::UiContext,
 };
 
@@ -169,6 +170,8 @@ struct Context {
     last_mouse_position: Option<Vec2>,
     mouse_wheel: Vec2,
 
+    scene_graph: scene_graph::SceneGraph,
+
     prevent_quit_event: bool,
     quit_requested: bool,
 
@@ -176,7 +179,6 @@ struct Context {
 
     input_events: Vec<Vec<MiniquadInputEvent>>,
 
-    gl: QuadGl,
     camera_matrix: Option<Mat4>,
 
     ui_context: UiContext,
@@ -192,8 +194,8 @@ struct Context {
     #[cfg(one_screenshot)]
     counter: usize,
 
-    camera_stack: Vec<camera::CameraState>,
     texture_batcher: texture::Batcher,
+    white_texture: TextureId,
     unwind: bool,
     recovery_future: Option<Pin<Box<dyn Future<Output = ()>>>>,
 
@@ -301,13 +303,13 @@ impl Context {
             input_events: Vec::new(),
 
             camera_matrix: None,
-            gl: QuadGl::new(&mut *ctx),
 
             ui_context: UiContext::new(&mut *ctx, screen_width, screen_height),
             fonts_storage: text::FontsStorage::new(&mut *ctx),
             texture_batcher: texture::Batcher::new(&mut *ctx),
-            camera_stack: vec![],
+            white_texture: ctx.new_texture_from_rgba8(1, 1, &[255, 255, 255, 255]),
 
+            scene_graph: scene_graph::SceneGraph::new(&mut *ctx),
             audio_context: audio::AudioContext::new(),
             coroutines_context: experimental::coroutines::CoroutinesContext::new(),
 
@@ -331,20 +333,22 @@ impl Context {
 
         self.ui_context.process_input();
 
-        let color = Self::DEFAULT_BG_COLOR;
+        // let color = Self::DEFAULT_BG_COLOR;
 
-        get_quad_context().clear(Some((color.r, color.g, color.b, color.a)), None, None);
-        self.gl.reset();
+        // get_quad_context().clear(Some((color.r, color.g, color.b, color.a)), None, None);
+        // self.gl.reset();
+
+        //self.clear(Self::DEFAULT_BG_COLOR);
     }
 
     fn end_frame(&mut self) {
-        crate::experimental::scene::update();
+        //crate::experimental::scene::update();
 
-        self.perform_render_passes();
+        //self.perform_render_passes();
 
-        self.ui_context.draw(get_quad_context(), &mut self.gl);
-        let screen_mat = self.pixel_perfect_projection_matrix();
-        self.gl.draw(get_quad_context(), screen_mat);
+        // self.ui_context.draw(get_quad_context(), &mut self.gl);
+        // let screen_mat = self.pixel_perfect_projection_matrix();
+        // self.gl.draw(get_quad_context(), screen_mat);
 
         get_quad_context().commit_frame();
 
@@ -395,12 +399,6 @@ impl Context {
         } else {
             self.pixel_perfect_projection_matrix()
         }
-    }
-
-    pub(crate) fn perform_render_passes(&mut self) {
-        let matrix = self.projection_matrix();
-
-        self.gl.draw(get_quad_context(), matrix);
     }
 }
 
@@ -690,6 +688,10 @@ impl EventHandler for Stage {
             context.quit_requested = true;
         }
     }
+}
+
+pub fn scene_graph() -> &'static mut scene_graph::SceneGraph {
+    &mut get_context().scene_graph
 }
 
 /// Not meant to be used directly, only from the macro.
