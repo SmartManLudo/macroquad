@@ -1,4 +1,3 @@
-use crate::prelude::screen_width;
 use crate::prelude::*;
 use crate::Vec2;
 

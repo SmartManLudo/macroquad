@@ -4,7 +4,7 @@ use crate::{
     file::{load_file, FileError},
     get_context,
     material::Material,
-    math::{vec2, vec3, Mat4, Rect},
+    math::{vec2, vec3, Mat4},
     window::miniquad::*,
 };
 
@@ -15,7 +15,7 @@ pub struct Model {
 pub async fn load_model(path: &str) -> Result<Model, FileError> {
     let bytes = load_file(path).await?;
 
-    let (gltf, buffers, images) = gltf::import_slice(&bytes).unwrap();
+    let (gltf, buffers, _images) = gltf::import_slice(&bytes).unwrap();
     assert!(gltf.meshes().len() == 1);
 
     let mesh = gltf.meshes().next().unwrap();
@@ -108,7 +108,7 @@ pub struct SpriteLayer<'a> {
 }
 
 impl<'a> SpriteLayer<'a> {
-    pub fn new(mut gl: QuadGl, render_state: &'a RenderState) -> SpriteLayer<'a> {
+    pub fn new(gl: QuadGl, render_state: &'a RenderState) -> SpriteLayer<'a> {
         SpriteLayer { gl, render_state }
     }
 
@@ -192,7 +192,7 @@ impl SceneGraph {
     pub fn draw_canvas(&mut self, mut canvas: SpriteLayer) {
         let context = &mut *get_context().quad_context;
 
-        let (width, height) = miniquad::window::screen_size();
+        let (_width, _height) = miniquad::window::screen_size();
 
         let screen_mat = //glam::Mat4::orthographic_rh_gl(0., width, height, 0., -1., 1.);
             canvas.render_state.matrix();

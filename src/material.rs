@@ -235,7 +235,7 @@ impl Default for MaterialParams {
 // }
 
 /// All following macroquad rendering calls will use the given material.
-pub fn gl_use_material(material: &Material) {
+pub fn gl_use_material(_material: &Material) {
     //get_context().gl.pipeline(Some(material.pipeline));
     unimplemented!()
 }

@@ -269,7 +269,7 @@ impl MiniquadInputEvent {
 }
 
 impl Context {
-    const DEFAULT_BG_COLOR: Color = BLACK;
+    //const DEFAULT_BG_COLOR: Color = BLACK;
 
     fn new() -> Context {
         let mut ctx: Box<dyn miniquad::RenderingBackend> =

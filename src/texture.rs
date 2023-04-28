@@ -523,11 +523,11 @@ impl Texture2D {
     /// Uploads [Image] data to part of this texture.
     pub fn update_part(
         &self,
-        image: &Image,
-        x_offset: i32,
-        y_offset: i32,
-        width: i32,
-        height: i32,
+        _image: &Image,
+        _x_offset: i32,
+        _y_offset: i32,
+        _width: i32,
+        _height: i32,
     ) {
         // let ctx = get_quad_context();
 

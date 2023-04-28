@@ -1,6 +1,6 @@
 //! 2D shapes rendering.
 
-use crate::{color::Color, get_context};
+use crate::color::Color;
 
 use crate::quad_gl::{DrawMode, Vertex};
 //use glam::{vec2, Vec2};
@@ -59,7 +59,6 @@ pub fn draw_rectangle_lines(
     thickness: f32,
     color: Color,
 ) {
-    let context = get_context();
     let t = thickness / 2.;
 
     #[rustfmt::skip]
@@ -108,8 +107,6 @@ pub fn draw_poly(
     rotation: f32,
     color: Color,
 ) {
-    let context = get_context();
-
     let mut vertices = Vec::<Vertex>::with_capacity(sides as usize + 2);
     let mut indices = Vec::<u16>::with_capacity(sides as usize * 3);
 
@@ -176,7 +173,6 @@ pub fn draw_line(
     thickness: f32,
     color: Color,
 ) {
-    let context = get_context();
     let dx = x2 - x1;
     let dy = y2 - y1;
 

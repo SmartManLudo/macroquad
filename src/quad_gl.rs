@@ -433,8 +433,8 @@ impl PipelinesStorage {
         ctx: &mut dyn RenderingBackend,
         shader: ShaderId,
         params: PipelineParams,
-        wants_screen_texture: bool,
-        mut uniforms: Vec<(String, UniformType)>,
+        _wants_screen_texture: bool,
+        uniforms: Vec<(String, UniformType)>,
         textures: Vec<String>,
     ) -> GlPipeline {
         let id = self
@@ -462,9 +462,9 @@ impl PipelinesStorage {
         self.pipelines[pip.0].as_mut().unwrap()
     }
 
-    fn delete_pipeline(&mut self, pip: GlPipeline) {
-        self.pipelines[pip.0] = None;
-    }
+    // fn delete_pipeline(&mut self, pip: GlPipeline) {
+    //     self.pipelines[pip.0] = None;
+    // }
 }
 
 pub struct QuadGl {
