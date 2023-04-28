@@ -1,6 +1,8 @@
-# Macroquad
+# Disclaimer on this branch
 
-Code in this branch does not work, not intended to work and will never work!
+The idea here - anything goes, the more ideas are going to be tried - the better. Implement first, think later kind of thing.
+
+Code here does not work, not intended to work and will never work!
 
 This is just a playground to experiment with the ideas outlined in this file.
 
@@ -8,7 +10,7 @@ This is just a playground to experiment with the ideas outlined in this file.
 
 - eleminate UB
 - API for fine-tuning batching, allow non-batched or instanced draw calls
-- keep all 0.3 API under macroquad::compatibility or macroquad::immediate_mode             
+- keep all 0.3 API under macroquad::compatibility or macroquad::immediate_mode
 
 # Details
 
