@@ -12,53 +12,56 @@ pub struct Model {
     bindings: Bindings,
 }
 
-pub async fn load_model(path: &str) -> Result<Model, FileError> {
-    let bytes = load_file(path).await?;
+impl Model {
+    pub async fn load_gltf(path: &str) -> Result<Model, FileError> {
+        let bytes = load_file(path).await?;
 
-    let (gltf, buffers, _images) = gltf::import_slice(&bytes).unwrap();
-    assert!(gltf.meshes().len() == 1);
+        let (gltf, buffers, _images) = gltf::import_slice(&bytes).unwrap();
+        assert!(gltf.meshes().len() == 1);
 
-    let mesh = gltf.meshes().next().unwrap();
+        let mesh = gltf.meshes().next().unwrap();
 
-    assert!(mesh.primitives().len() == 1);
+        assert!(mesh.primitives().len() == 1);
 
-    let primitive = mesh.primitives().next().unwrap();
+        let primitive = mesh.primitives().next().unwrap();
 
-    let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
-    let indices: Vec<u16> = reader
-        .read_indices()
-        .unwrap()
-        .into_u32()
-        .map(|ix| ix as u16)
-        .collect::<Vec<_>>();
-    let vertices: Vec<[f32; 3]> = reader.read_positions().unwrap().collect::<Vec<_>>();
-    let uvs: Vec<[f32; 2]> = reader
-        .read_tex_coords(0)
-        .unwrap()
-        .into_f32()
-        .collect::<Vec<_>>();
+        let indices: Vec<u16> = reader
+            .read_indices()
+            .unwrap()
+            .into_u32()
+            .map(|ix| ix as u16)
+            .collect::<Vec<_>>();
+        let vertices: Vec<[f32; 3]> = reader.read_positions().unwrap().collect::<Vec<_>>();
+        let uvs: Vec<[f32; 2]> = reader
+            .read_tex_coords(0)
+            .unwrap()
+            .into_f32()
+            .collect::<Vec<_>>();
 
-    let normals: Vec<[f32; 3]> = reader.read_normals().unwrap().collect::<Vec<_>>();
+        let normals: Vec<[f32; 3]> = reader.read_normals().unwrap().collect::<Vec<_>>();
 
-    //println!("{:#?}", vertices);
+        //println!("{:#?}", vertices);
 
-    let ctx = &mut get_context().quad_context;
-    let white_texture = ctx.new_texture_from_rgba8(1, 1, &[255, 255, 255, 255]);
-    let vertex_buffer =
-        ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&vertices));
-    let normals_buffer =
-        ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&normals));
-    let uvs_buffer = ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&uvs));
-    let index_buffer =
-        ctx.new_buffer_immutable(BufferType::IndexBuffer, BufferSource::slice(&indices));
-    let bindings = Bindings {
-        vertex_buffers: vec![vertex_buffer, uvs_buffer, normals_buffer],
-        index_buffer,
-        images: vec![white_texture, white_texture],
-    };
+        let ctx = &mut get_context().quad_context;
+        let white_texture = ctx.new_texture_from_rgba8(1, 1, &[255, 255, 255, 255]);
+        let vertex_buffer =
+            ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&vertices));
+        let normals_buffer =
+            ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&normals));
+        let uvs_buffer =
+            ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&uvs));
+        let index_buffer =
+            ctx.new_buffer_immutable(BufferType::IndexBuffer, BufferSource::slice(&indices));
+        let bindings = Bindings {
+            vertex_buffers: vec![vertex_buffer, uvs_buffer, normals_buffer],
+            index_buffer,
+            images: vec![white_texture, white_texture],
+        };
 
-    Ok(Model { bindings })
+        Ok(Model { bindings })
+    }
 }
 
 pub fn square() -> Model {
@@ -102,13 +105,13 @@ pub fn square() -> Model {
 
 use crate::quad_gl::QuadGl;
 
-pub struct SpriteLayer<'a> {
+pub struct SpriteLayer {
     gl: QuadGl,
-    render_state: &'a RenderState,
+    render_state: RenderState,
 }
 
-impl<'a> SpriteLayer<'a> {
-    pub fn new(gl: QuadGl, render_state: &'a RenderState) -> SpriteLayer<'a> {
+impl SpriteLayer {
+    pub fn new(gl: QuadGl, render_state: RenderState) -> SpriteLayer {
         SpriteLayer { gl, render_state }
     }
 
@@ -161,7 +164,31 @@ impl SceneGraph {
         self.models.len() - 1
     }
 
-    pub fn sprite_layer<'a>(&mut self, render_state: &'a RenderState) -> SpriteLayer<'a> {
+    pub fn fullscreen_canvas(&mut self) -> SpriteLayer {
+        fn pixel_perfect_render_state() -> RenderState {
+            let (w, h) = (
+                crate::window::screen_width(),
+                crate::window::screen_height(),
+            );
+            RenderState {
+                camera: crate::camera::Camera::Camera2D {
+                    rotation: 0.,
+                    zoom: vec2(1. / w * 2., -1. / h * 2.),
+                    target: vec2(w / 2., h / 2.),
+                    offset: vec2(0., 0.),
+                },
+                ..Default::default()
+            }
+        }
+
+        let render_state = pixel_perfect_render_state();
+        let mut gl = self.layers_cache.pop().unwrap();
+        gl.render_pass(None);
+
+        SpriteLayer::new(gl, render_state)
+    }
+
+    pub fn canvas(&mut self, render_state: RenderState) -> SpriteLayer {
         let mut gl = self.layers_cache.pop().unwrap();
         let render_pass = render_state.render_target.map(|rt| rt.render_pass);
         gl.render_pass(render_pass);

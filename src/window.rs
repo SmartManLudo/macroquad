@@ -17,10 +17,8 @@ pub fn next_frame() -> crate::exec::FrameFuture {
 /// Fill window background with solid color.
 /// Note: even when "clear_background" was not called explicitly
 /// screen will be cleared at the beginning of the frame.
-pub fn clear_background(_color: Color) {
-    // let context = get_context();
-
-    // context.gl.clear(get_quad_context(), color);
+pub fn clear_background(color: Color) {
+    let mut canvas = crate::scene_graph().clear(color);
 }
 
 #[doc(hidden)]

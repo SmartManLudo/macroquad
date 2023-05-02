@@ -291,27 +291,22 @@ pub fn load_ttf_font_from_bytes(bytes: &[u8]) -> Result<Font, FontError> {
     Ok(font)
 }
 
-/// Draw text with given font_size
-pub fn draw_text(
-    sprite_layer: &mut SpriteLayer,
-    text: &str,
-    x: f32,
-    y: f32,
-    font_size: f32,
-    color: Color,
-) {
-    draw_text_ex(
-        sprite_layer,
-        text,
-        x,
-        y,
-        TextParams {
-            font_size: font_size as u16,
-            font_scale: 1.0,
-            color,
-            ..Default::default()
-        },
-    )
+impl SpriteLayer {
+    /// Draw text with given font_size
+    pub fn draw_text(&mut self, text: &str, x: f32, y: f32, font_size: f32, color: Color) {
+        draw_text_ex(
+            self,
+            text,
+            x,
+            y,
+            TextParams {
+                font_size: font_size as u16,
+                font_scale: 1.0,
+                color,
+                ..Default::default()
+            },
+        )
+    }
 }
 
 /// Draw text with custom params such as font, font size and font scale.
