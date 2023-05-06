@@ -35,6 +35,7 @@
 //!     }
 //! }
 //!```
+#![allow(warnings)]
 
 use miniquad::*;
 
@@ -168,6 +169,7 @@ struct Context {
     chars_pressed_ui_queue: Vec<char>,
     mouse_position: Vec2,
     last_mouse_position: Option<Vec2>,
+    mouse_raw_delta: Vec2,
     mouse_wheel: Vec2,
 
     scene_graph: scene_graph::SceneGraph,
@@ -293,6 +295,7 @@ impl Context {
             touches: HashMap::new(),
             mouse_position: vec2(0., 0.),
             last_mouse_position: None,
+            mouse_raw_delta: vec2(0., 0.),
             mouse_wheel: vec2(0., 0.),
 
             prevent_quit_event: false,
@@ -449,18 +452,19 @@ impl EventHandler for Stage {
     fn raw_mouse_motion(&mut self, x: f32, y: f32) {
         let context = get_context();
 
-        if context.cursor_grabbed {
-            context.mouse_position += Vec2::new(x, y);
+        context.mouse_raw_delta = vec2(x, y);
+        // if context.cursor_grabbed {
+        //     //context.mouse_position += Vec2::new(x, y);
 
-            let event = MiniquadInputEvent::MouseMotion {
-                x: context.mouse_position.x,
-                y: context.mouse_position.y,
-            };
-            context
-                .input_events
-                .iter_mut()
-                .for_each(|arr| arr.push(event.clone()));
-        }
+        //     let event = MiniquadInputEvent::MouseMotion {
+        //         x: context.mouse_position.x,
+        //         y: context.mouse_position.y,
+        //     };
+        //     context
+        //         .input_events
+        //         .iter_mut()
+        //         .for_each(|arr| arr.push(event.clone()));
+        // }
     }
 
     fn mouse_motion_event(&mut self, x: f32, y: f32) {
@@ -727,4 +731,3 @@ impl Window {
         });
     }
 }
-

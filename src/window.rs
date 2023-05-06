@@ -18,7 +18,7 @@ pub fn next_frame() -> crate::exec::FrameFuture {
 /// Note: even when "clear_background" was not called explicitly
 /// screen will be cleared at the beginning of the frame.
 pub fn clear_background(color: Color) {
-    let mut canvas = crate::scene_graph().clear(color);
+    crate::scene_graph().clear(color);
 }
 
 #[doc(hidden)]

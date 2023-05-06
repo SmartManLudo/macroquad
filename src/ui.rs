@@ -1215,13 +1215,13 @@ pub(crate) mod ui_context {
             let mouse_position = mouse_position();
 
             let mut ui = self.ui.borrow_mut();
-            ui.mouse_move(mouse_position);
+            ui.mouse_move((mouse_position.x, mouse_position.y));
 
             if is_mouse_button_pressed(MouseButton::Left) {
-                ui.mouse_down(mouse_position);
+                ui.mouse_down((mouse_position.x, mouse_position.y));
             }
             if is_mouse_button_released(MouseButton::Left) {
-                ui.mouse_up(mouse_position);
+                ui.mouse_up((mouse_position.x, mouse_position.y));
             }
 
             let shift = is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift);

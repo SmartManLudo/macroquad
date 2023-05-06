@@ -290,104 +290,145 @@ impl Default for DrawTextureParams {
     }
 }
 
-pub fn draw_texture(
-    sprite_layer: &mut SpriteLayer,
+pub struct SpriteBuilder {
     texture: Texture2D,
-    x: f32,
-    y: f32,
+    pos: Vec2,
+    dest_size: Option<Vec2>,
+    rotation: f32,
     color: Color,
-) {
-    draw_texture_ex(sprite_layer, texture, x, y, color, Default::default());
 }
-
-pub fn draw_texture_ex(
-    sprite_layer: &mut SpriteLayer,
-
-    texture: Texture2D,
-    x: f32,
-    y: f32,
-    color: Color,
-    params: DrawTextureParams,
-) {
-    let context = get_context();
-
-    let Rect {
-        x: mut sx,
-        y: mut sy,
-        w: mut sw,
-        h: mut sh,
-    } = params.source.unwrap_or(Rect {
-        x: 0.,
-        y: 0.,
-        w: texture.width(),
-        h: texture.height(),
-    });
-
-    let mut texture = texture;
-
-    if let Some((batched_texture, uv)) = context.texture_batcher.get(texture) {
-        sx = ((sx / texture.width()) * uv.w + uv.x) * batched_texture.width();
-        sy = ((sy / texture.height()) * uv.h + uv.y) * batched_texture.height();
-        sw = (sw / texture.width()) * uv.w * batched_texture.width();
-        sh = (sh / texture.height()) * uv.h * batched_texture.height();
-
-        texture = batched_texture;
+impl SpriteBuilder {
+    pub fn new(texture: Texture2D) -> SpriteBuilder {
+        SpriteBuilder {
+            texture,
+            pos: vec2(0., 0.),
+            rotation: 0.0,
+            dest_size: None,
+            color: crate::color::WHITE,
+        }
+    }
+    pub fn pos(self, pos: Vec2) -> SpriteBuilder {
+        Self { pos, ..self }
+    }
+    pub fn dest_size(self, dest_size: Vec2) -> SpriteBuilder {
+        Self {
+            dest_size: Some(dest_size),
+            ..self
+        }
+    }
+    pub fn color(self, color: Color) -> SpriteBuilder {
+        Self { color, ..self }
+    }
+    pub fn rotation(self, rotation: f32) -> SpriteBuilder {
+        Self { rotation, ..self }
+    }
+    pub fn draw(self, canvas: &mut SpriteLayer) {
+        canvas.draw_texture_ex(
+            self.texture,
+            self.pos.x,
+            self.pos.y,
+            self.color,
+            DrawTextureParams {
+                rotation: self.rotation,
+                dest_size: self.dest_size,
+                ..Default::default()
+            },
+        );
+    }
+}
+impl SpriteLayer {
+    pub fn draw_texture(&mut self, texture: Texture2D, x: f32, y: f32, color: Color) {
+        self.draw_texture_ex(texture, x, y, color, Default::default());
     }
 
-    let (mut w, mut h) = match params.dest_size {
-        Some(dst) => (dst.x, dst.y),
-        _ => (sw, sh),
-    };
-    let mut x = x;
-    let mut y = y;
-    if params.flip_x {
-        x = x + w;
-        w = -w;
-    }
-    if params.flip_y {
-        y = y + h;
-        h = -h;
-    }
+    pub fn draw_texture_ex(
+        &mut self,
+        texture: Texture2D,
+        x: f32,
+        y: f32,
+        color: Color,
+        params: DrawTextureParams,
+    ) {
+        let context = get_context();
 
-    let pivot = params.pivot.unwrap_or(vec2(x + w / 2., y + h / 2.));
-    let m = pivot;
-    let p = [
-        vec2(x, y) - pivot,
-        vec2(x + w, y) - pivot,
-        vec2(x + w, y + h) - pivot,
-        vec2(x, y + h) - pivot,
-    ];
-    let r = params.rotation;
-    let p = [
-        vec2(
-            p[0].x * r.cos() - p[0].y * r.sin(),
-            p[0].x * r.sin() + p[0].y * r.cos(),
-        ) + m,
-        vec2(
-            p[1].x * r.cos() - p[1].y * r.sin(),
-            p[1].x * r.sin() + p[1].y * r.cos(),
-        ) + m,
-        vec2(
-            p[2].x * r.cos() - p[2].y * r.sin(),
-            p[2].x * r.sin() + p[2].y * r.cos(),
-        ) + m,
-        vec2(
-            p[3].x * r.cos() - p[3].y * r.sin(),
-            p[3].x * r.sin() + p[3].y * r.cos(),
-        ) + m,
-    ];
-    #[rustfmt::skip]
+        let Rect {
+            x: mut sx,
+            y: mut sy,
+            w: mut sw,
+            h: mut sh,
+        } = params.source.unwrap_or(Rect {
+            x: 0.,
+            y: 0.,
+            w: texture.width(),
+            h: texture.height(),
+        });
+
+        let mut texture = texture;
+
+        if let Some((batched_texture, uv)) = context.texture_batcher.get(texture) {
+            sx = ((sx / texture.width()) * uv.w + uv.x) * batched_texture.width();
+            sy = ((sy / texture.height()) * uv.h + uv.y) * batched_texture.height();
+            sw = (sw / texture.width()) * uv.w * batched_texture.width();
+            sh = (sh / texture.height()) * uv.h * batched_texture.height();
+
+            texture = batched_texture;
+        }
+
+        let (mut w, mut h) = match params.dest_size {
+            Some(dst) => (dst.x, dst.y),
+            _ => (sw, sh),
+        };
+        let mut x = x;
+        let mut y = y;
+        if params.flip_x {
+            x = x + w;
+            w = -w;
+        }
+        if params.flip_y {
+            y = y + h;
+            h = -h;
+        }
+
+        let pivot = params.pivot.unwrap_or(vec2(x + w / 2., y + h / 2.));
+        let m = pivot;
+        let p = [
+            vec2(x, y) - pivot,
+            vec2(x + w, y) - pivot,
+            vec2(x + w, y + h) - pivot,
+            vec2(x, y + h) - pivot,
+        ];
+        let r = params.rotation;
+        let p = [
+            vec2(
+                p[0].x * r.cos() - p[0].y * r.sin(),
+                p[0].x * r.sin() + p[0].y * r.cos(),
+            ) + m,
+            vec2(
+                p[1].x * r.cos() - p[1].y * r.sin(),
+                p[1].x * r.sin() + p[1].y * r.cos(),
+            ) + m,
+            vec2(
+                p[2].x * r.cos() - p[2].y * r.sin(),
+                p[2].x * r.sin() + p[2].y * r.cos(),
+            ) + m,
+            vec2(
+                p[3].x * r.cos() - p[3].y * r.sin(),
+                p[3].x * r.sin() + p[3].y * r.cos(),
+            ) + m,
+        ];
+        #[rustfmt::skip]
     let vertices = [
         Vertex::new(p[0].x, p[0].y, 0.,  sx      /texture.width(),  sy      /texture.height(), color),
         Vertex::new(p[1].x, p[1].y, 0., (sx + sw)/texture.width(),  sy      /texture.height(), color),
         Vertex::new(p[2].x, p[2].y, 0., (sx + sw)/texture.width(), (sy + sh)/texture.height(), color),
         Vertex::new(p[3].x, p[3].y, 0.,  sx      /texture.width(), (sy + sh)/texture.height(), color),
     ];
-    let indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
+        let indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
 
-    sprite_layer.gl().texture(Some(texture));
-    sprite_layer.gl().draw_mode(DrawMode::Triangles);
-    sprite_layer.gl().geometry(&vertices, &indices);
+        self.gl().texture(Some(texture));
+        self.gl().draw_mode(DrawMode::Triangles);
+        self.gl().geometry(&vertices, &indices);
+    }
 }
 
 /// Get pixel data from screen buffer and return an Image (screenshot)

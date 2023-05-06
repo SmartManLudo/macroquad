@@ -37,50 +37,17 @@ pub enum Camera {
         fovy: f32,
         /// Camera projection type, perspective or orthographics
         projection: Projection,
+
+        aspect: Option<f32>,
     },
 }
 
-#[derive(Clone, Debug)]
-pub struct RenderState {
-    pub depth_enabled: bool,
-    pub render_target: Option<RenderTarget>,
-
-    pub aspect: Option<f32>,
-
-    ///
-    pub camera: Camera,
-    /// Rectangle on the screen where this camera's output is drawn
-    /// Numbers are pixels in window-spae, x, y, width, height
-    pub viewport: Option<(i32, i32, i32, i32)>,
-
-    pub material: Option<Material>,
-}
-
-impl Default for RenderState {
-    fn default() -> Self {
-        RenderState {
-            depth_enabled: false,
-            render_target: None,
-            aspect: None,
-
-            camera: Camera::Camera2D {
-                target: vec2(0., 0.),
-                zoom: vec2(1., 1.),
-                offset: vec2(0., 0.),
-                rotation: 0.,
-            },
-            viewport: None,
-            material: None,
-        }
-    }
-}
-
-impl RenderState {
+impl Camera {
     const Z_NEAR: f32 = 3.0;
     const Z_FAR: f32 = 1000.0;
 
     pub fn matrix(&self) -> Mat4 {
-        match self.camera {
+        match self {
             Camera::Camera2D {
                 target,
                 rotation,
@@ -117,12 +84,13 @@ impl RenderState {
                 target,
                 up,
                 projection,
+                aspect,
             } => {
-                let aspect = self.aspect.unwrap_or(screen_width() / screen_height());
+                let aspect = aspect.unwrap_or(screen_width() / screen_height());
                 match projection {
                     Projection::Perspective => {
-                        Mat4::perspective_rh_gl(fovy, aspect, Self::Z_NEAR, Self::Z_FAR)
-                            * Mat4::look_at_rh(position, target, up)
+                        Mat4::perspective_rh_gl(*fovy, aspect, Self::Z_NEAR, Self::Z_FAR)
+                            * Mat4::look_at_rh(*position, *target, *up)
                     }
                     Projection::Orthographics => {
                         let top = fovy / 2.0;
@@ -135,11 +103,70 @@ impl RenderState {
                             top,
                             Self::Z_NEAR,
                             Self::Z_FAR,
-                        ) * Mat4::look_at_rh(position, target, up)
+                        ) * Mat4::look_at_rh(*position, *target, *up)
                     }
                 }
             }
         }
+    }
+
+    pub fn fixed_height(height: f32) -> Camera {
+        let aspect = screen_width() / screen_height();
+        let width = height * aspect;
+        Camera::Camera2D {
+            rotation: 0.,
+            zoom: vec2(1. / width, 1. / height),
+            target: vec2(0., 0.),
+            offset: vec2(0., 0.),
+        }
+    }
+
+    pub fn screen_to_world(&self, point: Vec2) -> Vec2 {
+        let point = vec2(
+            point.x / screen_width() * 2. - 1.,
+            1. - point.y / screen_height() * 2.,
+        );
+        let inv_mat = self.matrix().inverse();
+        let transform = inv_mat.transform_point3(vec3(point.x, point.y, 0.));
+
+        vec2(transform.x, transform.y)
+    }
+}
+#[derive(Clone, Debug)]
+pub struct RenderState {
+    pub depth_enabled: bool,
+    pub render_target: Option<RenderTarget>,
+
+    ///
+    pub camera: Camera,
+    /// Rectangle on the screen where this camera's output is drawn
+    /// Numbers are pixels in window-spae, x, y, width, height
+    pub viewport: Option<(i32, i32, i32, i32)>,
+
+    pub material: Option<Material>,
+}
+
+impl Default for RenderState {
+    fn default() -> Self {
+        RenderState {
+            depth_enabled: false,
+            render_target: None,
+
+            camera: Camera::Camera2D {
+                target: vec2(0., 0.),
+                zoom: vec2(1., 1.),
+                offset: vec2(0., 0.),
+                rotation: 0.,
+            },
+            viewport: None,
+            material: None,
+        }
+    }
+}
+
+impl RenderState {
+    pub fn matrix(&self) -> Mat4 {
+        self.camera.matrix()
     }
 }
 

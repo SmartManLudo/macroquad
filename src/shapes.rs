@@ -2,10 +2,11 @@
 
 use crate::color::Color;
 
-use crate::quad_gl::{DrawMode, Vertex};
-//use glam::{vec2, Vec2};
-
-use crate::scene_graph::SpriteLayer;
+use crate::{
+    math::{Rect, Vec2},
+    quad_gl::{DrawMode, Vertex},
+    scene_graph::SpriteLayer,
+};
 
 impl SpriteLayer {
     // pub fn draw_triangle(v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
@@ -28,21 +29,6 @@ impl SpriteLayer {
     //     draw_line(v2.x, v2.y, v3.x, v3.y, thickness, color);
     //     draw_line(v3.x, v3.y, v1.x, v1.y, thickness, color);
     // }
-
-    pub fn draw_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32, color: Color) {
-        #[rustfmt::skip]
-        let vertices = [
-            Vertex::new(x    , y    , 0., 0.0, 0.0, color),
-            Vertex::new(x + w, y    , 0., 1.0, 0.0, color),
-            Vertex::new(x + w, y + h, 0., 1.0, 1.0, color),
-            Vertex::new(x    , y + h, 0., 0.0, 1.0, color),
-        ];
-        let indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
-
-        self.gl().texture(None);
-        self.gl().draw_mode(DrawMode::Triangles);
-        self.gl().geometry(&vertices, &indices);
-    }
 
     pub fn draw_rectangle_lines(
         &mut self,
@@ -185,5 +171,101 @@ impl SpriteLayer {
             ],
             &[0, 1, 2, 2, 1, 3],
         );
+    }
+}
+
+pub struct ShapeBuilder {
+    vertices: Vec<Vertex>,
+    indices: Vec<u16>,
+    rotation: f32,
+}
+impl ShapeBuilder {
+    pub fn circle(pos: Vec2, radius: f32, color: Color) -> ShapeBuilder {
+        let sides = 50;
+        let mut vertices = Vec::<Vertex>::with_capacity(sides as usize + 2);
+        let mut indices = Vec::<u16>::with_capacity(sides as usize * 3);
+
+        let rot = 0.0; //0.0.to_radians();
+        vertices.push(Vertex::new(pos.x, pos.y, 0., 0., 0., color));
+        for i in 0..sides + 1 {
+            let rx = (i as f32 / sides as f32 * std::f32::consts::PI * 2. + rot).cos();
+            let ry = (i as f32 / sides as f32 * std::f32::consts::PI * 2. + rot).sin();
+
+            let vertex = Vertex::new(pos.x + radius * rx, pos.y + radius * ry, 0., rx, ry, color);
+
+            vertices.push(vertex);
+
+            if i != sides {
+                indices.extend_from_slice(&[0, i as u16 + 1, i as u16 + 2]);
+            }
+        }
+
+        ShapeBuilder {
+            vertices,
+            indices,
+            rotation: 0.0,
+        }
+    }
+
+    pub fn line(start: Vec2, end: Vec2, thickness: f32, color: Color) -> ShapeBuilder {
+        let (x1, y1) = start.into();
+        let (x2, y2) = end.into();
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+        // https://stackoverflow.com/questions/1243614/how-do-i-calculate-the-normal-vector-of-a-line-segment
+
+        let nx = -dy;
+        let ny = dx;
+
+        let tlen = (nx * nx + ny * ny).sqrt() / (thickness * 0.5);
+        if tlen < std::f32::EPSILON {
+            // TODO: check if ShapeBuilder {vertices: vec![]} is ok
+            panic!();
+        }
+        let tx = nx / tlen;
+        let ty = ny / tlen;
+
+        let vertices = vec![
+            Vertex::new(x1 + tx, y1 + ty, 0., 0., 0., color),
+            Vertex::new(x1 - tx, y1 - ty, 0., 0., 0., color),
+            Vertex::new(x2 + tx, y2 + ty, 0., 0., 0., color),
+            Vertex::new(x2 - tx, y2 - ty, 0., 0., 0., color),
+        ];
+        let indices = vec![0, 1, 2, 2, 1, 3];
+
+        ShapeBuilder {
+            vertices,
+            indices,
+            rotation: 0.0,
+        }
+    }
+
+    pub fn rectangle(rect: Rect, color: Color) -> ShapeBuilder {
+        let Rect { x, y, w, h } = rect;
+        #[rustfmt::skip]
+        let vertices = vec![
+            Vertex::new(x    , y    , 0., 0.0, 0.0, color),
+            Vertex::new(x + w, y    , 0., 1.0, 0.0, color),
+            Vertex::new(x + w, y + h, 0., 1.0, 1.0, color),
+            Vertex::new(x    , y + h, 0., 0.0, 1.0, color),
+        ];
+        let indices = vec![0, 1, 2, 0, 2, 3];
+
+        ShapeBuilder {
+            vertices,
+            indices,
+            rotation: 0.0,
+        }
+    }
+
+    pub fn rotation(self, rotation: f32) -> ShapeBuilder {
+        Self { rotation, ..self }
+    }
+
+    pub fn draw(self, canvas: &mut SpriteLayer) {
+        canvas.gl().texture(None);
+        canvas.gl().draw_mode(DrawMode::Triangles);
+        canvas.gl().geometry(&self.vertices, &self.indices);
     }
 }

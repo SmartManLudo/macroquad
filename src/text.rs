@@ -357,8 +357,7 @@ pub fn draw_text_ex(
             glyph.h as f32,
         );
 
-        crate::texture::draw_texture_ex(
-            sprite_layer,
+        sprite_layer.draw_texture_ex(
             atlas.texture(),
             dest.x,
             dest.y,
