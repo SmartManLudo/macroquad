@@ -234,12 +234,18 @@ impl MagicSnapshotter {
              1.0,  1.0, 1., 1. ,
             -1.0,  1.0, 0., 1. ,
         ];
-        let vertex_buffer =
-            ctx.new_buffer_immutable(BufferType::VertexBuffer, BufferSource::slice(&vertices));
+        let vertex_buffer = ctx.new_buffer(
+            BufferType::VertexBuffer,
+            BufferUsage::Immutable,
+            BufferSource::slice(&vertices),
+        );
 
         let indices: [u16; 6] = [0, 1, 2, 0, 2, 3];
-        let index_buffer =
-            ctx.new_buffer_immutable(BufferType::IndexBuffer, BufferSource::slice(&indices));
+        let index_buffer = ctx.new_buffer(
+            BufferType::IndexBuffer,
+            BufferUsage::Immutable,
+            BufferSource::slice(&indices),
+        );
 
         let bindings = Bindings {
             vertex_buffers: vec![vertex_buffer],
@@ -693,13 +699,15 @@ impl QuadGl {
         let white_texture = self.white_texture;
 
         for _ in 0..self.draw_calls.len() - self.draw_calls_bindings.len() {
-            let vertex_buffer = ctx.new_buffer_stream(
+            let vertex_buffer = ctx.new_buffer(
                 BufferType::VertexBuffer,
-                self.max_vertices * std::mem::size_of::<Vertex>(),
+                BufferUsage::Stream,
+                BufferSource::empty::<Vertex>(self.max_vertices),
             );
-            let index_buffer = ctx.new_buffer_stream(
+            let index_buffer = ctx.new_buffer(
                 BufferType::IndexBuffer,
-                self.max_indices * std::mem::size_of::<u16>(),
+                BufferUsage::Stream,
+                BufferSource::empty::<u16>(self.max_indices),
             );
             let bindings = Bindings {
                 vertex_buffers: vec![vertex_buffer],
@@ -994,13 +1002,15 @@ impl QuadGl {
             draw_call.indices = vec![0; max_indices];
         }
         for binding in &mut self.draw_calls_bindings {
-            let vertex_buffer = ctx.new_buffer_stream(
+            let vertex_buffer = ctx.new_buffer(
                 BufferType::VertexBuffer,
-                self.max_vertices * std::mem::size_of::<Vertex>(),
+                BufferUsage::Stream,
+                BufferSource::empty::<Vertex>(self.max_vertices),
             );
-            let index_buffer = ctx.new_buffer_stream(
+            let index_buffer = ctx.new_buffer(
                 BufferType::IndexBuffer,
-                self.max_indices * std::mem::size_of::<u16>(),
+                BufferUsage::Stream,
+                BufferSource::empty::<u16>(self.max_indices),
             );
             *binding = Bindings {
                 vertex_buffers: vec![vertex_buffer],

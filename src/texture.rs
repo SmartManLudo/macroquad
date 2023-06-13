@@ -538,7 +538,7 @@ impl Texture2D {
         assert_eq!(width, image.width as u32);
         assert_eq!(height, image.height as u32);
 
-        ctx.update_texture(self.texture, &image.bytes);
+        ctx.texture_update(self.texture, &image.bytes);
     }
 
     /// Uploads [Image] data to part of this texture.
@@ -552,8 +552,14 @@ impl Texture2D {
     ) {
         let ctx = get_quad_context();
 
-        self.texture
-            .update_texture_part(ctx, x_offset, y_offset, width, height, &image.bytes)
+        ctx.texture_update_part(
+            self.texture,
+            x_offset,
+            y_offset,
+            width,
+            height,
+            &image.bytes,
+        )
     }
 
     /// Returns the width of this texture.
